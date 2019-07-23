@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Dialog</title>
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+    <script>
+        const isMac = !!navigator.platform && 
+        navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
+        if (isMac && window.external && !window.external.RegisterEvent) {
+            window.external.RegisterEvent = () => { };
+        }
+        Office.onReady()
+            .then(() => console.log('office ready'))
+            .catch((err) => console.error(err))
+    </script>
 </head>
 <body>
     <h2>Dialog magic!</h2>
@@ -12,7 +24,7 @@
     <script>
         const closeBtn = document.getElementById('close-btn')
         const handleClick = () => {
-            console.log('clicked!')
+            Office.context.ui.messageParent(JSON.stringify({ dialog: false }));
         }
         closeBtn.addEventListener('click', handleClick)
       

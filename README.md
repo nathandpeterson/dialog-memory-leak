@@ -1,32 +1,60 @@
-# Office-Addin-TaskPane-JS
+#Overview
 
-This repository contains the source code used by the [Yo Office generator](https://github.com/OfficeDev/generator-office) when you create a new Office Add-in that appears in the task pane. You can also use this repository as a sample to base your own project from if you choose not to use the generator. 
+This add-in was created to reproduce a memory leak in the Office.js API for Outlook in Edge-webview. This issue is not present in earlier versions of Outlook, which used IE
+as the webview renderer.
 
-## JavaScript
+The original issue was posted [here] (https://github.com/OfficeDev/office-js/issues/584)
+with screenshots of gradually increasing memory profile for One Note.
 
-This template is written using JavaScript. For the [TypeScript](http://www.typescriptlang.org/) version of this template, go to [Office-Addin-TaskPane](https://github.com/OfficeDev/Office-Addin-TaskPane).
+##Main points:
+1. When opening a dialog from the taskpane, some portion of memory is allocated in the taskpane script.
+2. When closing the dialog from the taskpane, that memory is never freed up.
+3. This only occurs when we call `dialog.close()` on the dialog instance, not when the user clicks the close button provided by the UI at the top of the dialog.
 
-## Debugging
+All the code in this repro does is open and close a dialog.
 
-This template supports debugging using any of the following techniques:
+Here is a profile from this add-in. [Screen shot with memory leak](screenshot1.png)
 
-- [Use a browser's developer tools](https://docs.microsoft.com/office/dev/add-ins/testing/debug-add-ins-in-office-online)
-- [Attach a debugger from the task pane](https://docs.microsoft.com/office/dev/add-ins/testing/attach-debugger-from-task-pane)
-- [Use F12 developer tools on Windows 10](https://docs.microsoft.com/office/dev/add-ins/testing/debug-add-ins-using-f12-developer-tools-on-windows-10)
+And here is a short gif. [Gif of memory leak](clip.gif)
 
-## Questions and comments
+##Environment
 
-We'd love to get your feedback about this sample. You can send your feedback to us in the *Issues* section of this repository.
+* Platform [PC desktop, Mac, iOS, Office Online]: PC desktop
+* Host [Excel, Word, PowerPoint, etc.]: Outlook
+* Office version number: Version 1906 (Build 11727.20210)
+* Operating System: Windows 10 Version 1903 for x64
 
-Questions about Microsoft Office 365 development in general should be posted to [Stack Overflow](http://stackoverflow.com/questions/tagged/office-js+API).  If your question is about the Office JavaScript APIs, make sure it's tagged with  [office-js].
+The key code snippet is reproduced below. Much of this code is adapted from the docs:
+```js
+Office.context.ui.displayDialogAsync(
+    DIALOG_URL, 
+    { height: 30, width: 20, displayInIframe: true },
+    (asyncResult) => {
+      if(asyncResult) {
+        const dialog = asyncResult.value
 
-## Additional resources
+        function processMessage(arg) {
+          var messageFromDialog = JSON.parse(arg.message);
+          if(messageFromDialog.dialog === false) {
+            dialog.close()
+          }
+        }
+        dialog.addEventHandler(Office.EventType.DialogMessageReceived, processMessage);
 
-* [Office add-in documentation](https://docs.microsoft.com/office/dev/add-ins/overview/office-add-ins)
-* More Office Add-in samples at [OfficeDev on Github](https://github.com/officedev)
+      } else {
+        console.error('asyncResult failed check', asyncResult)
+      }
+    }
+    )
+```
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information, see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+##Instructions
 
-## Copyright
+You can replicate this issue by cloning the repo, building, and side-loading the application.
+`npm install`
+`npm run dev`
+Side load the application from `https://localhost:3000/manifest.xml`
 
-Copyright (c) 2019 Microsoft Corporation. All rights reserved.
+I also deployed this add-in via surge. The manifest for the deployed version is at
+`https://dialog-opener.surge.sh/manifest.xml`
+You can easily test the deployed version of this code by side-loading the manifest.

@@ -19,7 +19,6 @@ export async function run() {
     { height: 30, width: 20, displayInIframe: true },
     (asyncResult) => {
       if(asyncResult) {
-        console.log('adding event handler')
         const dialog = asyncResult.value
 
         function processMessage(arg) {
@@ -28,12 +27,11 @@ export async function run() {
             dialog.close()
           }
         }
+        
         dialog.addEventHandler(Office.EventType.DialogMessageReceived, processMessage);
-
       } else {
-        console.log('asyncResult failed check', asyncResult)
+        console.error('asyncResult failed check', asyncResult)
       }
-      
     }
     )
 }

@@ -1,4 +1,4 @@
-#Overview
+# Overview
 
 This add-in was created to reproduce a memory leak in the Office.js API for Outlook in Edge-webview. This issue is not present in earlier versions of Outlook, which used IE
 as the webview renderer.
@@ -6,7 +6,7 @@ as the webview renderer.
 The original issue was posted [here] (https://github.com/OfficeDev/office-js/issues/584)
 with screenshots of gradually increasing memory profile for One Note.
 
-##Main points:
+## Main points:
 1. When opening a dialog from the taskpane, some portion of memory is allocated in the taskpane script.
 2. When closing the dialog from the taskpane, that memory is never freed up.
 3. This only occurs when we call `dialog.close()` on the dialog instance, not when the user clicks the close button provided by the UI at the top of the dialog.
@@ -17,7 +17,7 @@ Here is a profile from this add-in. [Screen shot with memory leak](screenshot1.p
 
 And here is a short gif. [Gif of memory leak](clip.gif)
 
-##Environment
+## Environment
 
 * Platform [PC desktop, Mac, iOS, Office Online]: PC desktop
 * Host [Excel, Word, PowerPoint, etc.]: Outlook
@@ -48,7 +48,7 @@ Office.context.ui.displayDialogAsync(
     )
 ```
 
-##Instructions
+## Instructions
 
 You can replicate this issue by cloning the repo, building, and side-loading the application.
 `npm install`
